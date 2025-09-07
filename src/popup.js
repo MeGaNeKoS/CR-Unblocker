@@ -1,4 +1,4 @@
-var browser = browser || chrome
+const browser = window.browser || window.chrome
 
 let proxyStatusInterval = null
 
@@ -57,7 +57,7 @@ document.getElementById('open-dashboard').addEventListener('click', () => {
  */
 function addSettingCheckbox(id, callback) {
 	document.getElementById(id).addEventListener('change', (ev) => {
-		let settings = {};
+		const settings = {};
 		settings[id] = ev.target.checked;
 		browser.runtime.sendMessage({ action: 'saveSettings', settings: settings });
 		if (typeof callback === 'function') {
@@ -83,11 +83,7 @@ browser.runtime.sendMessage({ action: 'getSettings' }, (settings) => {
 browser.runtime.onMessage.addListener((message) => {
 	if (message.event === 'settingsChanged') {
 		handleSwitchRegionChange(message.settings.switchRegion)
-	}
-})
-
-browser.runtime.onMessage.addListener((message) => {
-	if (message.event === 'proxyTestResult') {
+	} else if (message.event === 'proxyTestResult') {
 		const output = document.getElementById('proxyStatus');
 
 		if (message.success) {
@@ -96,7 +92,7 @@ browser.runtime.onMessage.addListener((message) => {
 			output.textContent = `❌ Proxy[${message.proxy}] failed: ${message.error || 'Unavailable'}`;
 		}
 	}
-});
+})
 window.addEventListener('unload', () => {
 	if (proxyStatusInterval) {
 		clearInterval(proxyStatusInterval)

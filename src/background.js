@@ -23,6 +23,17 @@ const bypassDomains = [
 ];
 
 const staticExtensions = /\.(jpg|jpeg|png|gif|webp|mp4|m4s|js|css|woff2?|ttf|svg|ico|json|xml)$/i;
+const staticResourceTypes = new Set([
+	'image',
+	'imageset',
+	'font',
+	'stylesheet',
+	'script',
+	'media',
+	'web_manifest',
+	'object',
+	'object_subrequest'
+]);
 
 async function getProxyConfig(settings) {
 	if (settings.proxyCustom) {
@@ -40,17 +51,7 @@ async function getProxyConfig(settings) {
 }
 
 async function handleProxyRequest(requestInfo) {
-	if (requestInfo.type in [
-		'image',
-		'imageset',
-		'font',
-		'stylesheet',
-		'script',
-		'media',
-		'web_manifest',
-		'object',
-		'object_subrequest'
-	]) {
+	if (staticResourceTypes.has(requestInfo.type)) {
 		// Skip static resources
 		return
 	}

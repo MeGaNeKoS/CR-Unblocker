@@ -1,9 +1,9 @@
-# CR-Unblocker 3.0
+# CR-Unblocker 4.0
 
-CR-Unblocker helps accessing region locked anime on Crunchyroll without the need for a VPN. This extension will only proxy the request to obtain the session token but not other traffic. This way the site stays fast and responsive!
+CR-Unblocker helps accessing region locked anime on Crunchyroll without the need for a VPN. The extension proxies geo-restricted Crunchyroll traffic through a U.S. server while loading static assets directly so the site stays fast and responsive.
 
 ## I've heard it isn't safe?
-We only proxy the token request through a proxy - no logging or similar! If you do not trust our servers, you are free to configure your own SOCKS proxy in the extension settings. Please note that we can not be held responsible for compromised accounts.
+Only the geo-blocked Crunchyroll traffic goes through our proxy—no logging or similar. If you do not trust our servers, you are free to configure your own SOCKS or HTTP proxy in the extension settings. Please note that we can not be held responsible for compromised accounts.
 
 ## Installing
 You can just install the Firefox Extension (also working on Android) from [here](https://addons.mozilla.org/firefox/addon/crunchy-unblocker).

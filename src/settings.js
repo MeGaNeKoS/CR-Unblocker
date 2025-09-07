@@ -1,4 +1,4 @@
-var browser = browser || chrome;
+const browser = window.browser || window.chrome;
 
 /**
  * Export function
@@ -16,7 +16,7 @@ var browser = browser || chrome;
 		proxyPass: '',
 		proxyType: 'socks'
 	}
-	let validSettings = Object.keys(settings);
+	const validSettings = Object.keys(settings);
 
 	/**
 	 * Load saved settings
@@ -36,9 +36,9 @@ var browser = browser || chrome;
 	 * @param  {Object} keys Object containing the settings to change
 	 */
 	function saveSettings(keys) {
-		let changed = {};
-		for (let key of Object.keys(keys)) {
-			if (validSettings.indexOf(key) !== -1) {
+		const changed = {};
+		for (const key of Object.keys(keys)) {
+			if (validSettings.includes(key)) {
 				// Update settings object
 				settings[key] = keys[key];
 				changed[key] = keys[key];

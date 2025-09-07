@@ -1,21 +1,20 @@
-var browser = browser || chrome;
+const browser = window.browser || window.chrome;
 
 /**
  * Tab menu
  */
-let tabLinks = document.querySelectorAll('.tabs li a');
-let tabParent = document.querySelector('.tab-content');
-for (let i = 0; i < tabLinks.length; i++) {
-	let id = tabLinks[i].href;
-	id = id.substring(id.indexOf('#') + 1);
-	let tab = document.querySelector(`#${id}`);
-	tabLinks[i].addEventListener('click', () => {
-		for (let j = 0; j < tabLinks.length; j++) {
-			tabLinks[j].parentNode.className = '';
+const tabLinks = document.querySelectorAll('.tabs li a');
+const tabParent = document.querySelector('.tab-content');
+for (const link of tabLinks) {
+	const id = link.hash.substring(1);
+	const tab = document.getElementById(id);
+	link.addEventListener('click', () => {
+		for (const item of tabLinks) {
+			item.parentNode.className = '';
 		}
-		tabLinks[i].parentNode.className = 'active';
-		for (let j = 0; j < tabParent.children.length; j++) {
-			tabParent.children[j].className = 'tab';
+		link.parentNode.className = 'active';
+		for (const child of tabParent.children) {
+			child.className = 'tab';
 		}
 		tab.className = 'tab active';
 	});
@@ -28,9 +27,9 @@ for (let i = 0; i < tabLinks.length; i++) {
  */
 function addSettingCheckbox(id, callback) {
 	document.getElementById(id).addEventListener('change', (ev) => {
-		let settings = {};
+		const settings = {};
 		settings[id] = ev.target.checked;
-		browser.runtime.sendMessage({ action: 'saveSettings', settings: settings });
+		browser.runtime.sendMessage({ action: 'saveSettings', settings });
 		if (typeof callback === 'function') {
 			// eslint-disable-next-line callback-return
 			callback(ev.target.checked);
@@ -45,9 +44,9 @@ function addSettingCheckbox(id, callback) {
  */
 function addSettingInput(id, callback) {
 	document.getElementById(id).addEventListener('change', (ev) => {
-		let settings = {};
+		const settings = {};
 		settings[id] = ev.target.value;
-		browser.runtime.sendMessage({ action: 'saveSettings', settings: settings });
+		browser.runtime.sendMessage({ action: 'saveSettings', settings });
 		if (typeof callback === 'function') {
 			// eslint-disable-next-line callback-return
 			callback(ev.target.value);
