@@ -12,6 +12,9 @@ Unfortunately the Chrome and Edge Stores have removed the unblocker from their s
 
 Alternatively you can just download the source and package it yourself. The extension is tested in Firefox, but it should also work in all other browsers supporting WebExtensions API.
 
+## Status & Monitoring
+We publish live service status at [community-proxy.meganeko.dev/monitor](https://community-proxy.meganeko.dev/monitor), which also feeds our uptime robot alerts. If you want to inspect the HAProxy backend directly, the raw statistics dashboard is available at [community-proxy.meganeko.dev/stats](https://community-proxy.meganeko.dev/stats).
+
 ## How to Install CR-Unblocker on Android (Two Methods)
 
 ### **Option 1: Easiest Way (Desktop View in Firefox Mobile)**
