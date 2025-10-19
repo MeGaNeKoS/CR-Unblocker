@@ -14,7 +14,7 @@
     "build:zip": "echo '-> building for chrome and firefox stores' && cd src; zip -0r ../public/extension.zip ./*; cd ..",
     "watch": "watch 'npm run -s build' src/"
   },
-  "author": "Finn",
+  "author": "めがねこ",
   "license": "MIT",
   "devDependencies": {
     "eslint": "^8.16.0",
