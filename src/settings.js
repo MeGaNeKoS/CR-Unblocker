@@ -1,4 +1,4 @@
-const browser = window.browser || window.chrome;
+const settingBrowserCtx = window.browser || window.chrome;
 
 /**
  * Export function
@@ -21,13 +21,13 @@ const browser = window.browser || window.chrome;
 	/**
 	 * Load saved settings
 	 */
-	browser.storage.local.get({ settings: null }, (item) => {
+	settingBrowserCtx.storage.local.get({ settings: null }, (item) => {
 		if (item.settings !== null) {
 			// Merge saved settings with default settings overwriting the default ones
 			settings = Object.assign(settings, item.settings);
 		} else {
 			// Save default settings
-			browser.storage.local.set({ settings: settings });
+			settingBrowserCtx.storage.local.set({ settings: settings });
 		}
 	});
 
@@ -44,8 +44,8 @@ const browser = window.browser || window.chrome;
 				changed[key] = keys[key];
 			}
 		}
-		browser.runtime.sendMessage({ event: 'settingsChanged', changed: changed, settings: settings });
-		browser.storage.local.set({ settings: settings });
+		settingBrowserCtx.runtime.sendMessage({ event: 'settingsChanged', changed: changed, settings: settings });
+		settingBrowserCtx.storage.local.set({ settings: settings });
 	}
 
 	/**
@@ -67,7 +67,7 @@ const browser = window.browser || window.chrome;
 /**
  * Export object through messages
  */
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+settingBrowserCtx.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === 'saveSettings') {
 		this.settings.save(message.settings);
 	} else if (message.action === 'getSettings') {

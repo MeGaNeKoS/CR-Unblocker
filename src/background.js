@@ -1,4 +1,4 @@
-const browser = window.browser || window.chrome
+const bgBrowserCtx = window.browser || window.chrome
 
 const DEFAULT_PROXY_CONFIG = {
 	type: 'socks',
@@ -81,11 +81,11 @@ async function handleProxyRequest(requestInfo) {
 	return [proxyConfig, { type: 'direct' }]
 }
 
-browser.proxy.onRequest.addListener(
+bgBrowserCtx.proxy.onRequest.addListener(
 	handleProxyRequest,
 	{ urls: ['*://*.crunchyroll.com/*'] }
 )
-browser.webRequest.onAuthRequired.addListener(
+bgBrowserCtx.webRequest.onAuthRequired.addListener(
 	() => {
 		const settings = this.settings.get();
 		console.log(`Using ${settings.proxyType} proxy for authentication`)
@@ -104,14 +104,14 @@ browser.webRequest.onAuthRequired.addListener(
 	['blocking']
 );
 
-browser.proxy.onError.addListener(error => {
+bgBrowserCtx.proxy.onError.addListener(error => {
 	console.error(`Proxy error: ${error.message}`)
 	if (proxyTestInProgress) {
 		proxyTestError = error.message
 	} else {
-		browser.notifications.create('proxy-error', {
+		bgBrowserCtx.notifications.create('proxy-error', {
 			type: 'basic',
-			iconUrl: browser.runtime.getURL('icons/Crunchyroll-128.png'),
+			iconUrl: bgBrowserCtx.runtime.getURL('icons/Crunchyroll-128.png'),
 			title: 'CR-Unblocker encountered an error!',
 			message: error.message
 		})
@@ -148,7 +148,7 @@ async function testProxyConfig(proxy, sendResult) {
 		}
 	}
 
-	browser.proxy.onRequest.addListener(
+	bgBrowserCtx.proxy.onRequest.addListener(
 		testProxyHandler,
 		{ urls: ['https://static.crunchyroll.com/config/cx-web/config.json'] }
 	)
@@ -170,14 +170,14 @@ async function testProxyConfig(proxy, sendResult) {
 		sendResult({ success: false, error: userError, proxy: `${proxy.host}:${proxy.port}` })
 	} finally {
 		proxyTestInProgress = false
-		browser.proxy.onRequest.removeListener(testProxyHandler)
+		bgBrowserCtx.proxy.onRequest.removeListener(testProxyHandler)
 	}
 }
 
-browser.runtime.onMessage.addListener(async(message) => {
+bgBrowserCtx.runtime.onMessage.addListener(async(message) => {
 	if (message.action === 'testCustomProxy') {
 		await testProxyConfig(message.proxy, result => {
-			browser.runtime.sendMessage({ event: 'customProxyTestResult', ...result })
+			bgBrowserCtx.runtime.sendMessage({ event: 'customProxyTestResult', ...result })
 		})
 		return true
 	}
@@ -186,7 +186,7 @@ browser.runtime.onMessage.addListener(async(message) => {
 		const currentSettings = this.settings.get()
 		const proxyConfig = await getProxyConfig(currentSettings)
 		await testProxyConfig(proxyConfig, result => {
-			browser.runtime.sendMessage({ event: 'proxyTestResult', ...result })
+			bgBrowserCtx.runtime.sendMessage({ event: 'proxyTestResult', ...result })
 		})
 
 		return true
@@ -221,7 +221,7 @@ async function keepAliveProxyStatus() {
  * Query all active Crunchyroll tabs when the extension loads.
  * Adds non-discarded Crunchyroll tabs to the activeCrunchyrollTabs set.
  */
-browser.tabs.query({ url: '*://*.crunchyroll.com/*' }).then(tabs => {
+bgBrowserCtx.tabs.query({ url: '*://*.crunchyroll.com/*' }).then(tabs => {
 	for (const tab of tabs) {
 		if (!tab.discarded) {
 			activeCrunchyrollTabs.add(tab.id);
@@ -235,7 +235,7 @@ browser.tabs.query({ url: '*://*.crunchyroll.com/*' }).then(tabs => {
  * If the URL changes to a Crunchyroll page and the tab is active, add it to the set.
  * If the URL is not a Crunchyroll page or the tab is discarded, remove it from the set.
  */
-browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+bgBrowserCtx.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 	if (changeInfo.url) {
 		const isCrunchyroll = changeInfo.url.includes('crunchyroll.com');
 		if (isCrunchyroll && !tab.discarded) {
@@ -252,8 +252,8 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
  * Listener for when the active tab changes (user switches tabs).
  * If the new tab is a Crunchyroll page and is not discarded, add it to the set.
  */
-browser.tabs.onActivated.addListener(async({ tabId }) => {
-	const tab = await browser.tabs.get(tabId);
+bgBrowserCtx.tabs.onActivated.addListener(async({ tabId }) => {
+	const tab = await bgBrowserCtx.tabs.get(tabId);
 	if (
 		tab.url.includes('crunchyroll.com') && !tab.discarded
 	) {
@@ -266,7 +266,7 @@ browser.tabs.onActivated.addListener(async({ tabId }) => {
  * Listener for when a tab is closed.
  * If the closed tab was tracked as a Crunchyroll tab, remove it from the set.
  */
-browser.tabs.onRemoved.addListener((tabId) => {
+bgBrowserCtx.tabs.onRemoved.addListener((tabId) => {
 	if (activeCrunchyrollTabs.has(tabId)) {
 		activeCrunchyrollTabs.delete(tabId);
 		maybeUpdateProxyKeepAlive();
