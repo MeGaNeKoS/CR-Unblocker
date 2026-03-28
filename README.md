@@ -8,9 +8,9 @@ Only the geo-blocked Crunchyroll traffic goes through our proxy—no logging or 
 ## Installing
 You can just install the Firefox Extension (also working on Android) from [here](https://addons.mozilla.org/firefox/addon/crunchy-unblocker).
 
-Unfortunately the Chrome and Edge Stores have removed the unblocker from their stores, reuploading would probably not work so this option will no longer be there.
+The extension was previously available on the Chrome and Edge stores, but has since been removed. The old version used a cookie-based session swapping approach which no longer works. The extension was later rewritten to use Firefox's `browser.proxy.onRequest` API for proxy routing, which means the current version **only works on Firefox**.
 
-Alternatively you can just download the source and package it yourself. The extension is tested in Firefox, but it should also work in all other browsers supporting WebExtensions API.
+Chromium-based browsers (Chrome, Edge, etc.) use a different proxy model (`chrome.proxy.settings` with PAC scripts), so supporting them would require a separate implementation. The Chrome Web Store does allow proxy extensions, so republishing is possible in theory, though there is always a risk of takedown if the streaming service files a complaint. Contributions for Chromium/Manifest V3 support are welcome (see [Contributing](#contributing)).
 
 ## Status & Monitoring
 We publish live service status at [community-proxy.meganeko.dev/monitor](https://community-proxy.meganeko.dev/monitor), which also feeds our uptime robot alerts. If you want to inspect the HAProxy backend directly, the raw statistics dashboard is available at [community-proxy.meganeko.dev/stats](https://community-proxy.meganeko.dev/stats).
