@@ -1,6 +1,8 @@
 const browser = window.browser || window.chrome
 
-let proxyStatusInterval = null
+let proxyStatusTimer = null
+let proxyStatusEnabled = false
+let proxyStatusRunning = false
 
 function setProxyStatusSection(show) {
 	const section = document.getElementById('proxy-status-section');
@@ -10,6 +12,12 @@ function setProxyStatusSection(show) {
 	}
 }
 function testProxyStatus() {
+	proxyStatusTimer = null;
+	if (!proxyStatusEnabled) {
+		return;
+	}
+
+	proxyStatusRunning = true;
 	const statusEl = document.getElementById('proxyStatus');
 	statusEl.textContent = 'Connecting...';
 	statusEl.style.color = 'white';
@@ -20,20 +28,39 @@ function testProxyStatus() {
 	});
 }
 
+function scheduleProxyStatus(delay) {
+	if (!proxyStatusEnabled || proxyStatusTimer || proxyStatusRunning) {
+		return;
+	}
+
+	proxyStatusTimer = setTimeout(testProxyStatus, delay);
+}
+
+function finishProxyStatus() {
+	proxyStatusRunning = false;
+	scheduleProxyStatus(15000);
+}
+
 function handleSwitchRegionChange(enabled) {
+	proxyStatusEnabled = enabled;
 	if (enabled) {
 		setProxyStatusSection(true);
-		testProxyStatus();
-		if (!proxyStatusInterval) {
-			proxyStatusInterval = setInterval(testProxyStatus, 15000);
-		}
+		scheduleProxyStatus(0);
 	} else {
 		setProxyStatusSection(false);
-		if (proxyStatusInterval) {
-			clearInterval(proxyStatusInterval);
-			proxyStatusInterval = null;
+		if (proxyStatusTimer) {
+			clearTimeout(proxyStatusTimer);
+			proxyStatusTimer = null;
 		}
 	}
+}
+
+function formatProxySuccess(message) {
+	if (message.slow) {
+		return `Proxy[${message.proxy}] is working but slow (${message.durationMs}ms). Your internet or the proxy may be slow.`;
+	}
+
+	return `Proxy[${message.proxy}] is working!`;
 }
 
 /**
@@ -87,15 +114,16 @@ browser.runtime.onMessage.addListener((message) => {
 		const output = document.getElementById('proxyStatus');
 
 		if (message.success) {
-			output.textContent = `✅ Proxy[${message.proxy}] is working!`;
+			output.textContent = formatProxySuccess(message);
 		} else {
-			output.textContent = `❌ Proxy[${message.proxy}] failed: ${message.error || 'Unavailable'}`;
+			output.textContent = `Proxy[${message.proxy}] failed: ${message.error || 'Unavailable'}`;
 		}
+		finishProxyStatus();
 	}
 })
 window.addEventListener('unload', () => {
-	if (proxyStatusInterval) {
-		clearInterval(proxyStatusInterval)
+	if (proxyStatusTimer) {
+		clearTimeout(proxyStatusTimer)
 	}
 })
 

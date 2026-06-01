@@ -12,7 +12,7 @@
     <div class="tab-area">
         <ul class="tabs">
             <li>
-                <p class="brand">CR-Unblocker <span>v4.0.4</span></p>
+                <p class="brand">CR-Unblocker <span>v4.0.5</span></p>
             </li>
             <li class="active"><a href="#tab-settings">Settings</a></li>
             <li><a href="#tab-about">About</a></li>
@@ -33,6 +33,11 @@
                 <label for="notifyProxyErrors"
                     title="Shows a browser notification when Firefox reports a proxy error outside a manual proxy test.">Proxy
                     error notifications</label>
+                <br>
+                <input type="checkbox" id="debugLog" class="cr-checkbox" />
+                <label for="debugLog"
+                    title="Stores recent extension events locally so they can be copied into a bug report.">Debug
+                    logging</label>
                 <br>
                 <input type="checkbox" id="proxyCustom" class="cr-checkbox" />
                 <label for="proxyCustom">Use custom proxy</label>
@@ -82,6 +87,14 @@
                     Test Proxy
                 </button>
                 <p id="proxyTestResult"></p>
+                <h2>Debug Log</h2>
+                <div class="button-row">
+                    <button id="refreshDebugLogBtn" class="cr-button compact-button">Refresh</button>
+                    <button id="copyDebugLogBtn" class="cr-button compact-button">Copy</button>
+                    <button id="downloadDebugLogBtn" class="cr-button compact-button">Download</button>
+                    <button id="clearDebugLogBtn" class="cr-button compact-button">Clear</button>
+                </div>
+                <textarea id="debug-log-output" readonly></textarea>
                 <br>
             </div>
             <div class="tab" id="tab-about">

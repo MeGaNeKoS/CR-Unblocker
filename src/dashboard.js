@@ -60,6 +60,7 @@ function addSettingInput(id, callback) {
 addSettingCheckbox('switchRegion')
 addSettingCheckbox('keepAlive')
 addSettingCheckbox('notifyProxyErrors')
+addSettingCheckbox('debugLog')
 addSettingCheckbox('proxyCustom')
 addSettingInput('proxyType')
 addSettingInput('proxyHost')
@@ -75,6 +76,7 @@ function displaySettings(settings) {
 	document.getElementById('switchRegion').checked = settings.switchRegion
 	document.getElementById('keepAlive').checked = settings.keepAlive
 	document.getElementById('notifyProxyErrors').checked = settings.notifyProxyErrors
+	document.getElementById('debugLog').checked = settings.debugLog
 	document.getElementById('proxyCustom').checked = settings.proxyCustom
 	document.getElementById('proxyType').value = settings.proxyType || 'socks'
 	document.getElementById('proxyHost').value = settings.proxyHost
@@ -100,6 +102,58 @@ browser.runtime.onMessage.addListener((message) => {
 		handleSwitchRegionChange(message.settings.switchRegion);
 	}
 });
+
+function renderDebugLog(logs) {
+	const output = document.getElementById('debug-log-output');
+	output.value = logs.map(entry => JSON.stringify(entry)).join('\n');
+	output.scrollTop = output.scrollHeight;
+}
+
+function refreshDebugLog() {
+	browser.storage.local.get({ debugLogs: [] }, item => {
+		renderDebugLog(Array.isArray(item.debugLogs) ? item.debugLogs : []);
+	});
+}
+
+function formatProxySuccess(message) {
+	if (message.slow) {
+		return `Proxy[${message.proxy}] is working but slow (${message.durationMs}ms). Your internet or the proxy may be slow.`;
+	}
+
+	return `Proxy[${message.proxy}] is working!`;
+}
+
+document.getElementById('refreshDebugLogBtn').addEventListener('click', refreshDebugLog);
+
+document.getElementById('copyDebugLogBtn').addEventListener('click', () => {
+	const output = document.getElementById('debug-log-output');
+	output.select();
+	document.execCommand('copy');
+});
+
+document.getElementById('downloadDebugLogBtn').addEventListener('click', () => {
+	const output = document.getElementById('debug-log-output');
+	const blob = new Blob([output.value], { type: 'application/x-ndjson' });
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement('a');
+	const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+	link.href = url;
+	link.download = `cr-unblocker-debug-${timestamp}.jsonl`;
+	link.click();
+	URL.revokeObjectURL(url);
+});
+
+document.getElementById('clearDebugLogBtn').addEventListener('click', () => {
+	browser.storage.local.set({ debugLogs: [] }, refreshDebugLog);
+});
+
+browser.storage.onChanged.addListener((changes, areaName) => {
+	if (areaName === 'local' && changes.debugLogs) {
+		renderDebugLog(Array.isArray(changes.debugLogs.newValue) ? changes.debugLogs.newValue : []);
+	}
+});
+
+refreshDebugLog();
 
 /**
  * Test for the proxy configuration
@@ -134,11 +188,11 @@ browser.runtime.onMessage.addListener((message) => {
 		output.style.borderRadius = '4px';
 
 		if (message.success) {
-			output.textContent = `✅ Proxy[${message.proxy}] is working!`;
+			output.textContent = formatProxySuccess(message);
 			output.style.color = '#f78c25';
 			output.style.backgroundColor = 'white';
 		} else {
-			output.textContent = `❌ Proxy[${message.proxy}] failed: ${message.error}`;
+			output.textContent = `Proxy[${message.proxy}] failed: ${message.error}`;
 			output.style.color = 'white';
 			output.style.backgroundColor = '#dc7c20';
 		}
@@ -148,20 +202,29 @@ browser.runtime.onMessage.addListener((message) => {
 		const output = document.getElementById('proxyStatus');
 
 		if (message.success) {
-			output.textContent = `✅ Proxy[${message.proxy}] is working!`;
+			output.textContent = formatProxySuccess(message);
 			output.style.color = '#f78c25';
 			output.style.backgroundColor = 'white';
 		} else {
-			output.textContent = `❌ Proxy[${message.proxy}] failed: ${message.error}`;
+			output.textContent = `Proxy[${message.proxy}] failed: ${message.error}`;
 			output.style.color = 'white';
 			output.style.backgroundColor = '#dc7c20';
 		}
+		finishProxyStatus();
 	}
 });
 
-let proxyStatusInterval = null
+let proxyStatusTimer = null
+let proxyStatusEnabled = false
+let proxyStatusRunning = false
 
 function testProxyStatus() {
+	proxyStatusTimer = null;
+	if (!proxyStatusEnabled) {
+		return;
+	}
+
+	proxyStatusRunning = true;
 	const statusEl = document.getElementById('proxyStatus');
 	statusEl.textContent = 'Connecting...';
 	statusEl.style.color = 'white';
@@ -172,18 +235,29 @@ function testProxyStatus() {
 	});
 }
 
+function scheduleProxyStatus(delay) {
+	if (!proxyStatusEnabled || proxyStatusTimer || proxyStatusRunning) {
+		return;
+	}
+
+	proxyStatusTimer = setTimeout(testProxyStatus, delay);
+}
+
+function finishProxyStatus() {
+	proxyStatusRunning = false;
+	scheduleProxyStatus(15000);
+}
+
 function handleSwitchRegionChange(enabled) {
+	proxyStatusEnabled = enabled;
 	if (enabled) {
 		setProxyStatusSection(true);
-		testProxyStatus();
-		if (!proxyStatusInterval) {
-			proxyStatusInterval = setInterval(testProxyStatus, 15000);
-		}
+		scheduleProxyStatus(0);
 	} else {
 		setProxyStatusSection(false);
-		if (proxyStatusInterval) {
-			clearInterval(proxyStatusInterval);
-			proxyStatusInterval = null;
+		if (proxyStatusTimer) {
+			clearTimeout(proxyStatusTimer);
+			proxyStatusTimer = null;
 		}
 	}
 }
@@ -197,7 +271,7 @@ function setProxyStatusSection(show) {
 }
 
 window.addEventListener('unload', () => {
-	if (proxyStatusInterval) {
-		clearInterval(proxyStatusInterval)
+	if (proxyStatusTimer) {
+		clearTimeout(proxyStatusTimer)
 	}
 })

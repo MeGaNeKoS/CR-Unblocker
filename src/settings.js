@@ -10,6 +10,7 @@ const settingBrowserCtx = window.browser || window.chrome;
 		switchRegion: true,
 		keepAlive: false,
 		notifyProxyErrors: true,
+		debugLog: false,
 		proxyCustom: false,
 		proxyHost: '',
 		proxyPort: 1080,

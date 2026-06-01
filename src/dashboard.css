@@ -109,6 +109,35 @@ h1, h2, h3, h4, h5, h6 {
 	color: white;
 }
 
+.button-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 10px 0;
+}
+
+.compact-button {
+	min-width: 0;
+	width: auto;
+	display: inline-block;
+	margin: 0;
+	padding: 7px 16px;
+}
+
+#debug-log-output {
+	width: 100%;
+	min-height: 180px;
+	box-sizing: border-box;
+	resize: vertical;
+	border: 1px solid #fff8;
+	border-radius: 4px;
+	padding: 8px;
+	background-color: white;
+	color: #333;
+	font-family: monospace;
+	font-size: 0.85rem;
+}
+
 .tab-content::-webkit-scrollbar {
 	width: 8px;
 }
