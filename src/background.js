@@ -106,9 +106,10 @@ bgBrowserCtx.webRequest.onAuthRequired.addListener(
 
 bgBrowserCtx.proxy.onError.addListener(error => {
 	console.error(`Proxy error: ${error.message}`)
+	const settings = this.settings.get();
 	if (proxyTestInProgress) {
 		proxyTestError = error.message
-	} else {
+	} else if (settings.notifyProxyErrors) {
 		bgBrowserCtx.notifications.create('proxy-error', {
 			type: 'basic',
 			iconUrl: bgBrowserCtx.runtime.getURL('icons/Crunchyroll-128.png'),

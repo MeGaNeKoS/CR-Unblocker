@@ -59,6 +59,7 @@ function addSettingInput(id, callback) {
  */
 addSettingCheckbox('switchRegion')
 addSettingCheckbox('keepAlive')
+addSettingCheckbox('notifyProxyErrors')
 addSettingCheckbox('proxyCustom')
 addSettingInput('proxyType')
 addSettingInput('proxyHost')
@@ -73,6 +74,7 @@ addSettingInput('proxyPass')
 function displaySettings(settings) {
 	document.getElementById('switchRegion').checked = settings.switchRegion
 	document.getElementById('keepAlive').checked = settings.keepAlive
+	document.getElementById('notifyProxyErrors').checked = settings.notifyProxyErrors
 	document.getElementById('proxyCustom').checked = settings.proxyCustom
 	document.getElementById('proxyType').value = settings.proxyType || 'socks'
 	document.getElementById('proxyHost').value = settings.proxyHost

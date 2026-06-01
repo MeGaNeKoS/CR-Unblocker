@@ -12,7 +12,7 @@
     <div class="tab-area">
         <ul class="tabs">
             <li>
-                <p class="brand">CR-Unblocker <span>v4.0.3</span></p>
+                <p class="brand">CR-Unblocker <span>v4.0.4</span></p>
             </li>
             <li class="active"><a href="#tab-settings">Settings</a></li>
             <li><a href="#tab-about">About</a></li>
@@ -28,6 +28,11 @@
                 <label for="keepAlive"
                     title="Keeps the proxy connection active. Some providers terminate idle connections, so this prevents that.">Keep
                     Alive</label>
+                <br>
+                <input type="checkbox" id="notifyProxyErrors" class="cr-checkbox" />
+                <label for="notifyProxyErrors"
+                    title="Shows a browser notification when Firefox reports a proxy error outside a manual proxy test.">Proxy
+                    error notifications</label>
                 <br>
                 <input type="checkbox" id="proxyCustom" class="cr-checkbox" />
                 <label for="proxyCustom">Use custom proxy</label>
