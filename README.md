@@ -6,61 +6,26 @@ CR-Unblocker helps accessing region locked anime on Crunchyroll without the need
 Only the geo-blocked Crunchyroll traffic goes through our proxy—no logging or similar. If you do not trust our servers, you are free to configure your own SOCKS or HTTP proxy in the extension settings. Please note that we can not be held responsible for compromised accounts.
 
 ## Installing
-You can just install the Firefox Extension (also working on Android) from [here](https://addons.mozilla.org/firefox/addon/crunchy-unblocker).
+Install CR-Unblocker for Firefox desktop or Android from [AMO](https://addons.mozilla.org/firefox/addon/crunchy-unblocker).
 
-The extension was previously available on the Chrome and Edge stores, but has since been removed. The old version used a cookie-based session swapping approach which no longer works. The extension was later rewritten to use Firefox's `browser.proxy.onRequest` API for proxy routing, which means the current version **only works on Firefox**.
+The extension was previously available on the Chrome and Edge stores, but has since been removed. The old version used a cookie-based session swapping approach which no longer works. The extension was later rewritten to use Firefox's `browser.proxy.onRequest` API for proxy routing, which means the current version only works on Firefox.
 
-Chromium-based browsers (Chrome, Edge, etc.) use a different proxy model (`chrome.proxy.settings` with PAC scripts), so supporting them would require a separate implementation. The Chrome Web Store does allow proxy extensions, so republishing is possible in theory, though there is always a risk of takedown if the streaming service files a complaint. Contributions for Chromium/Manifest V3 support are welcome (see [Contributing](#contributing)).
+### Chrome / Chromium users
+
+For Chrome, Edge, Brave, and other Chromium-based browsers, use [GeoBypasser](https://github.com/MeGaNeKoS/GeoBypasser) instead. It is a generic proxy/routing extension rather than a Crunchyroll-specific unblocker, and it is available on the [Chrome Web Store](https://chromewebstore.google.com/detail/geobypass/ihocglepfddiancfooeablkngmckkjdm). Chrome Web Store policy can be strict about extensions whose sole purpose is bypassing restrictions on a specific website, so the generic routing approach is easier to publish and safer from future removal.
+
+GeoBypasser can import service-specific rules, including the maintained [Crunchyroll rule](https://github.com/MeGaNeKoS/GeoBypass-Rules/blob/main/Crunchyroll/Crunchyroll-rule.json). This is the preferred Chromium path because it keeps the browser extension generic while the rules define which traffic should use the proxy.
 
 ## Status & Monitoring
 We publish live service status at [community-proxy.meganeko.dev/monitor](https://community-proxy.meganeko.dev/monitor), which also feeds our uptime robot alerts. If you want to inspect the HAProxy backend directly, the raw statistics dashboard is available at [community-proxy.meganeko.dev/stats](https://community-proxy.meganeko.dev/stats).
 
-## How to Install CR-Unblocker on Android (Two Methods)
-
-### **Option 1: Easiest Way (Desktop View in Firefox Mobile)**
-
-1. Open Firefox on your Android device.
-2. Go to the [CR-Unblocker Add-on page](https://addons.mozilla.org/en-US/firefox/addon/crunchy-unblocker/).
-3. Switch your browser to **Desktop view** (tap the three dots menu and select "Desktop site").
-4. You should now see the **"Add to Firefox"** button—tap it to install the add-on.
-
-> *Tested and working on Firefox version 138 (Android).*
-
----
-
-### **Option 2: Using Firefox Nightly with Custom Add-on Collections**
-
-**Requirements:**
-
-* Android version 5.0 or higher
-* Mozilla Firefox account
-
-#### Steps:
-
-1. **Create a Firefox Account:**
-   Go to the [Mozilla Firefox site](https://support.mozilla.org/en-US/kb/access-mozilla-services-firefox-account) and create an account.
-   You'll need this account to [create a custom collection](https://support.mozilla.org/en-US/kb/how-use-collections-addonsmozillaorg).
-
-2. **Create a Collection:**
-   After logging in, create a collection and add the CR-Unblocker extension to it.
-   Your collection's **user ID** and **collection name** can be found [here](https://addons.mozilla.org/en-US/firefox/collections/).
-
-3. **Install Firefox Nightly:**
-   Download and install [Firefox Nightly](https://play.google.com/store/apps/details?id=org.mozilla.fenix&hl=en_US) from the Play Store.
-
-4. **Add Your Collection to Firefox Nightly:**
-   Follow [this guide](https://blog.mozilla.org/addons/2020/09/29/expanded-extension-support-in-firefox-for-android-nightly/) to add your collection to the app.
-
-5. **Install the Add-on:**
-   Once your collection is added, you'll be able to install CR-Unblocker directly from your collection in Firefox Nightly.
-
-#### **Tips for Using the Add-on**
+## Firefox Android Tips
 
 * **To adjust settings:**
-  Tap the three dots (`⋮`) → Add-ons → CR-Unblocker → Make your changes.
+  Tap the three dots menu -> Add-ons -> CR-Unblocker -> Make your changes.
 
 * **To open Crunchyroll via CR-Unblocker:**
-  Open any website → Tap the three dots (`⋮`) → Add-ons → CR-Unblocker → Open Crunchyroll → Enjoy!
+  Open any website -> tap the three dots menu -> Add-ons -> CR-Unblocker -> Open Crunchyroll.
 
 ## Requirements
 
