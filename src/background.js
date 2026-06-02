@@ -12,6 +12,8 @@ const DEFAULT_PROXY_CONFIG = {
 
 let proxyTestsInProgress = 0
 let proxyTestError = null
+let proxyTestInFlight = null
+let proxyTestInFlightKey = null
 
 let proxyStatusTimer = null
 let proxyStatusRunning = false
@@ -191,6 +193,19 @@ async function fetchWithTimeout(url, options = {}, timeout = 5000) {
 }
 
 async function testProxyConfig(proxy, sendResult, timeout = MANUAL_PROXY_TEST_TIMEOUT) {
+	const proxyTestKey = `${proxy.type}:${proxy.host}:${proxy.port}:${proxy.username || ''}:${proxy.proxyDNS !== false}:${timeout}`;
+
+	if (proxyTestInFlight && proxyTestInFlightKey === proxyTestKey) {
+		writeDebugLog('proxy_test_join', {
+			type: proxy.type,
+			host: proxy.host,
+			port: proxy.port
+		})
+		const result = await proxyTestInFlight;
+		sendResult({ ...result, proxy: `${proxy.host}:${proxy.port}` })
+		return
+	}
+
 	proxyTestsInProgress += 1
 	proxyTestError = null
 	const startedAt = Date.now();
@@ -221,35 +236,48 @@ async function testProxyConfig(proxy, sendResult, timeout = MANUAL_PROXY_TEST_TI
 		{ urls: ['https://static.crunchyroll.com/config/cx-web/config.json'] }
 	)
 
-	try {
-		const res = await fetchWithTimeout('https://static.crunchyroll.com/config/cx-web/config.json', { method: 'HEAD', cache: 'no-store' }, timeout)
-		const durationMs = Date.now() - startedAt;
-		let result
-		if (proxyTestError) {
-			result = { success: false, error: proxyTestError, durationMs }
-		} else if (res.ok) {
-			result = {
-				success: true,
-				slow: durationMs > SLOW_PROXY_TEST_THRESHOLD,
+	const runProxyTest = async() => {
+		try {
+			const res = await fetchWithTimeout('https://static.crunchyroll.com/config/cx-web/config.json', { method: 'HEAD', cache: 'no-store' }, timeout)
+			const durationMs = Date.now() - startedAt;
+			let result
+			if (proxyTestError) {
+				result = { success: false, error: proxyTestError, durationMs }
+			} else if (res.ok) {
+				result = {
+					success: true,
+					slow: durationMs > SLOW_PROXY_TEST_THRESHOLD,
+					durationMs
+				}
+			} else {
+				result = { success: false, error: `HTTP error: ${res.status}`, durationMs }
+			}
+			writeDebugLog('proxy_test_result', result)
+			return result
+		} catch (err) {
+			const durationMs = Date.now() - startedAt;
+			const userError = proxyTestError
+      || (err.name === 'AbortError' ? `Connection timed out (proxy did not respond within ${timeout / 1000} seconds)` : err.message)
+			const result = {
+				success: false,
+				error: userError,
 				durationMs
 			}
-		} else {
-			result = { success: false, error: `HTTP error: ${res.status}`, durationMs }
+			writeDebugLog('proxy_test_result', result)
+			return result
 		}
-		writeDebugLog('proxy_test_result', result)
+	}
+
+	proxyTestInFlightKey = proxyTestKey;
+	proxyTestInFlight = runProxyTest();
+
+	try {
+		const result = await proxyTestInFlight;
 		sendResult({ ...result, proxy: `${proxy.host}:${proxy.port}` })
-	} catch (err) {
-		const durationMs = Date.now() - startedAt;
-		const userError = proxyTestError
-      || (err.name === 'AbortError' ? `Connection timed out (proxy did not respond within ${timeout / 1000} seconds)` : err.message)
-		writeDebugLog('proxy_test_result', {
-			success: false,
-			error: userError,
-			durationMs
-		})
-		sendResult({ success: false, error: userError, durationMs, proxy: `${proxy.host}:${proxy.port}` })
 	} finally {
 		proxyTestsInProgress = Math.max(0, proxyTestsInProgress - 1)
+		proxyTestInFlight = null
+		proxyTestInFlightKey = null
 		bgBrowserCtx.proxy.onRequest.removeListener(testProxyHandler)
 	}
 }
@@ -381,13 +409,15 @@ bgBrowserCtx.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 			hostname: getHostname(tab.url)
 		});
 	} else {
-		activeCrunchyrollTabs.delete(tabId);
-		writeDebugLog('tab_untrack', {
-			reason: 'updated',
-			tabId,
-			hostname: getHostname(tab.url),
-			discarded: Boolean(tab.discarded)
-		});
+		const wasTracked = activeCrunchyrollTabs.delete(tabId);
+		if (wasTracked) {
+			writeDebugLog('tab_untrack', {
+				reason: 'updated',
+				tabId,
+				hostname: getHostname(tab.url),
+				discarded: Boolean(tab.discarded)
+			});
+		}
 	}
 
 	maybeUpdateProxyKeepAlive();
@@ -408,13 +438,15 @@ bgBrowserCtx.tabs.onActivated.addListener(async({ tabId }) => {
 				hostname: getHostname(tab.url)
 			});
 		} else {
-			activeCrunchyrollTabs.delete(tab.id);
-			writeDebugLog('tab_untrack', {
-				reason: 'activated',
-				tabId: tab.id,
-				hostname: getHostname(tab.url),
-				discarded: Boolean(tab.discarded)
-			});
+			const wasTracked = activeCrunchyrollTabs.delete(tab.id);
+			if (wasTracked) {
+				writeDebugLog('tab_untrack', {
+					reason: 'activated',
+					tabId: tab.id,
+					hostname: getHostname(tab.url),
+					discarded: Boolean(tab.discarded)
+				});
+			}
 		}
 		maybeUpdateProxyKeepAlive();
 	} catch (err) {

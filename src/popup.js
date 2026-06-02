@@ -38,7 +38,6 @@ function scheduleProxyStatus(delay) {
 
 function finishProxyStatus() {
 	proxyStatusRunning = false;
-	scheduleProxyStatus(15000);
 }
 
 function handleSwitchRegionChange(enabled) {
