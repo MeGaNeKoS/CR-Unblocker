@@ -60,8 +60,10 @@ function addSettingInput(id, callback) {
 addSettingCheckbox('switchRegion')
 addSettingCheckbox('keepAlive')
 addSettingCheckbox('notifyProxyErrors')
-addSettingCheckbox('debugLog')
+addSettingInput('logLevel')
 addSettingCheckbox('proxyCustom')
+addSettingCheckbox('customProxyStatic')
+addSettingCheckbox('customProxyMedia')
 addSettingInput('proxyType')
 addSettingInput('proxyHost')
 addSettingInput('proxyPort')
@@ -73,16 +75,21 @@ addSettingInput('proxyPass')
  * @param  {Object} settings Settings to display
  */
 function displaySettings(settings) {
+	selectedLogLevel = normalizeLogLevel(settings.logLevel)
 	document.getElementById('switchRegion').checked = settings.switchRegion
 	document.getElementById('keepAlive').checked = settings.keepAlive
 	document.getElementById('notifyProxyErrors').checked = settings.notifyProxyErrors
-	document.getElementById('debugLog').checked = settings.debugLog
+	document.getElementById('logLevel').value = selectedLogLevel
 	document.getElementById('proxyCustom').checked = settings.proxyCustom
 	document.getElementById('proxyType').value = settings.proxyType || 'socks'
 	document.getElementById('proxyHost').value = settings.proxyHost
 	document.getElementById('proxyPort').value = settings.proxyPort
 	document.getElementById('proxyUser').value = settings.proxyUser
 	document.getElementById('proxyPass').value = settings.proxyPass
+	const customProxyStatic = document.getElementById('customProxyStatic')
+	customProxyStatic.checked = Boolean(settings.customProxyStatic)
+	const customProxyMedia = document.getElementById('customProxyMedia')
+	customProxyMedia.checked = Boolean(settings.customProxyMedia)
 }
 
 /**
@@ -99,13 +106,77 @@ browser.runtime.sendMessage({ action: 'getSettings' }, (settings) => {
 browser.runtime.onMessage.addListener((message) => {
 	if (message.event === 'settingsChanged') {
 		displaySettings(message.settings);
+		renderDebugLog(debugLogs);
 		handleSwitchRegionChange(message.settings.switchRegion);
 	}
 });
 
+const DEBUG_LOG_LEVELS = ['error', 'warn', 'info', 'debug', 'trace'];
+const DEBUG_EVENT_LEVELS = new Map([
+	['proxy_error', 'error'],
+	['proxy_test_start', 'debug'],
+	['proxy_test_join', 'debug'],
+	['proxy_test_request', 'trace'],
+	['proxy_test_result', 'info'],
+	['keep_alive_start', 'info'],
+	['keep_alive_stop', 'info'],
+	['keep_alive_skip', 'debug'],
+	['keep_alive_result', 'info'],
+	['tab_track', 'trace'],
+	['tab_untrack', 'trace'],
+	['request_decision', 'debug'],
+	['request_started', 'trace'],
+	['request_response', 'debug'],
+	['request_completed', 'info'],
+	['request_failed', 'error'],
+	['proxy_auth_required', 'debug']
+]);
+let selectedLogLevel = 'warn';
+let debugLogs = [];
+
+function normalizeLogLevel(level) {
+	return DEBUG_LOG_LEVELS.includes(level) ? level : 'warn';
+}
+
+function getEntryLogLevel(entry) {
+	if (entry && DEBUG_LOG_LEVELS.includes(entry.level)) {
+		return entry.level;
+	}
+
+	if (
+		entry
+		&& entry.details
+		&& entry.details.success === false
+		&& (entry.event === 'proxy_test_result' || entry.event === 'keep_alive_result')
+	) {
+		return 'warn';
+	}
+
+	if (
+		entry
+		&& entry.details
+		&& Number(entry.details.statusCode) >= 400
+		&& (entry.event === 'request_response' || entry.event === 'request_completed')
+	) {
+		return 'warn';
+	}
+
+	return DEBUG_EVENT_LEVELS.get(entry && entry.event) || 'info';
+}
+
+function filterDebugLogs(logs) {
+	const selectedLevel = DEBUG_LOG_LEVELS.indexOf(normalizeLogLevel(selectedLogLevel));
+	return logs.filter(entry => {
+		const entryLevel = normalizeLogLevel(getEntryLogLevel(entry));
+		return DEBUG_LOG_LEVELS.indexOf(entryLevel) <= selectedLevel;
+	});
+}
+
 function renderDebugLog(logs) {
+	debugLogs = Array.isArray(logs) ? logs : [];
+	const visibleLogs = filterDebugLogs(debugLogs);
 	const output = document.getElementById('debug-log-output');
-	output.value = logs.map(entry => JSON.stringify(entry)).join('\n');
+	output.value = visibleLogs.map(entry => JSON.stringify(entry)).join('\n');
 	output.scrollTop = output.scrollHeight;
 }
 
@@ -148,7 +219,16 @@ document.getElementById('clearDebugLogBtn').addEventListener('click', () => {
 });
 
 browser.storage.onChanged.addListener((changes, areaName) => {
-	if (areaName === 'local' && changes.debugLogs) {
+	if (areaName !== 'local') {
+		return;
+	}
+
+	if (changes.settings && changes.settings.newValue) {
+		selectedLogLevel = normalizeLogLevel(changes.settings.newValue.logLevel);
+		renderDebugLog(debugLogs);
+	}
+
+	if (changes.debugLogs) {
 		renderDebugLog(Array.isArray(changes.debugLogs.newValue) ? changes.debugLogs.newValue : []);
 	}
 });

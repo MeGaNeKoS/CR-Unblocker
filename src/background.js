@@ -30,17 +30,51 @@ const bypassDomains = [
 	'eec.crunchyroll.com'
 ];
 
-const staticExtensions = /\.(jpg|jpeg|png|gif|webp|mp4|m4s|js|css|woff2?|ttf|svg|ico|json|xml)$/i;
+const staticExtensions = /\.(jpg|jpeg|png|gif|webp|js|css|woff2?|ttf|svg|ico)$/i;
+const mediaExtensions = /\.(mp4|m4s)$/i;
 const staticResourceTypes = new Set([
 	'image',
 	'imageset',
 	'font',
 	'stylesheet',
 	'script',
-	'media',
 	'web_manifest',
 	'object',
 	'object_subrequest'
+]);
+const mediaResourceTypes = new Set(['media']);
+
+const LOG_LEVEL_RANK = {
+	error: 0,
+	warn: 1,
+	info: 2,
+	debug: 3,
+	trace: 4
+};
+const DEFAULT_LOG_LEVEL = 'warn';
+const REQUEST_CONTEXT_LIMIT = 2000;
+const requestContexts = new Map();
+let debugLogWriteQueue = [];
+let debugLogWriteInProgress = false;
+
+const EVENT_LOG_LEVELS = new Map([
+	['proxy_error', 'error'],
+	['proxy_test_start', 'debug'],
+	['proxy_test_join', 'debug'],
+	['proxy_test_result', 'info'],
+	['proxy_test_request', 'trace'],
+	['keep_alive_start', 'info'],
+	['keep_alive_stop', 'info'],
+	['keep_alive_skip', 'debug'],
+	['keep_alive_result', 'info'],
+	['tab_track', 'trace'],
+	['tab_untrack', 'trace'],
+	['request_decision', 'debug'],
+	['request_started', 'trace'],
+	['request_response', 'debug'],
+	['request_completed', 'info'],
+	['request_failed', 'error'],
+	['proxy_auth_required', 'debug']
 ]);
 
 function isCrunchyrollUrl(url) {
@@ -60,32 +94,130 @@ function getHostname(url) {
 	}
 }
 
-function writeDebugLog(event, details = {}) {
-	const settings = this.settings.get();
-	if (!settings.debugLog) {
+function normalizeLogLevel(level) {
+	return Object.prototype.hasOwnProperty.call(LOG_LEVEL_RANK, level)
+		? level
+		: DEFAULT_LOG_LEVEL;
+}
+
+function getDefaultEventLogLevel(event, details) {
+	if (
+		(details && details.success === false)
+		&& (event === 'proxy_test_result' || event === 'keep_alive_result')
+	) {
+		return 'warn';
+	}
+	return EVENT_LOG_LEVELS.get(event) || DEFAULT_LOG_LEVEL;
+}
+
+function isLogLevelVisible(level, configuredLevel) {
+	return LOG_LEVEL_RANK[normalizeLogLevel(level)]
+		<= LOG_LEVEL_RANK[normalizeLogLevel(configuredLevel)];
+}
+
+function getSafeUrlDetails(url) {
+	try {
+		const urlObj = new URL(url);
+		return {
+			hostname: urlObj.hostname,
+			pathname: urlObj.pathname
+		};
+	} catch (err) {
+		return {
+			hostname: '',
+			pathname: ''
+		};
+	}
+}
+
+function rememberRequestContext(requestId, context) {
+	if (!requestId) {
 		return;
 	}
 
+	if (!requestContexts.has(requestId) && requestContexts.size >= REQUEST_CONTEXT_LIMIT) {
+		const oldestRequestId = requestContexts.keys().next().value;
+		requestContexts.delete(oldestRequestId);
+	}
+	requestContexts.set(requestId, {
+		...requestContexts.get(requestId),
+		...context
+	});
+}
+
+function getRequestContext(requestId) {
+	return requestContexts.get(requestId) || {};
+}
+
+function forgetRequestContext(requestId) {
+	if (requestId) {
+		requestContexts.delete(requestId);
+	}
+}
+
+function getRequestLifecycleDetails(requestDetails) {
+	const context = getRequestContext(requestDetails.requestId);
+	const safeUrl = getSafeUrlDetails(requestDetails.url);
+	const proxyInfo = requestDetails.proxyInfo || {};
+
+	return {
+		requestId: requestDetails.requestId,
+		tabId: requestDetails.tabId,
+		method: requestDetails.method,
+		resourceType: requestDetails.type,
+		hostname: safeUrl.hostname,
+		pathname: safeUrl.pathname,
+		route: context.route || (requestDetails.proxyInfo ? 'proxy' : 'unknown'),
+		decisionReason: context.decisionReason || null,
+		proxyType: context.proxyType || proxyInfo.type || null,
+		proxyHost: context.proxyHost || proxyInfo.host || null
+	};
+}
+
+function flushDebugLogQueue() {
+	if (debugLogWriteInProgress || debugLogWriteQueue.length === 0) {
+		return;
+	}
+
+	debugLogWriteInProgress = true;
+	const pendingEntries = debugLogWriteQueue.splice(0);
+	bgBrowserCtx.storage.local.get({ debugLogs: [] }, item => {
+		const logs = Array.isArray(item.debugLogs) ? item.debugLogs : [];
+		logs.push(...pendingEntries);
+		bgBrowserCtx.storage.local.set({ debugLogs: logs.slice(-DEBUG_LOG_LIMIT) }, () => {
+			debugLogWriteInProgress = false;
+			flushDebugLogQueue();
+		});
+	});
+}
+
+function writeDebugLog(event, details = {}, level) {
+	const settings = this.settings.get();
+	const entryLevel = normalizeLogLevel(level || getDefaultEventLogLevel(event, details));
 	const entry = {
 		time: new Date().toISOString(),
 		event,
+		level: entryLevel,
 		state: {
 			switchRegion: settings.switchRegion,
 			keepAlive: settings.keepAlive,
 			notifyProxyErrors: settings.notifyProxyErrors,
 			proxyCustom: settings.proxyCustom,
+			customProxyStatic: Boolean(settings.customProxyStatic),
+			customProxyMedia: Boolean(settings.customProxyMedia),
 			activeCrunchyrollTabs: activeCrunchyrollTabs.size,
 			proxyTestsInProgress
 		},
 		details
 	};
 
-	console.log('CR-Unblocker debug', entry);
-	bgBrowserCtx.storage.local.get({ debugLogs: [] }, item => {
-		const logs = Array.isArray(item.debugLogs) ? item.debugLogs : [];
-		logs.push(entry);
-		bgBrowserCtx.storage.local.set({ debugLogs: logs.slice(-DEBUG_LOG_LIMIT) });
-	});
+	// Capture every event in the existing bounded local buffer. The selected level
+	// controls console visibility and dashboard filtering, not event generation.
+	if (isLogLevelVisible(entryLevel, settings.logLevel)) {
+		console.log('CR-Unblocker debug', entry);
+	}
+	debugLogWriteQueue.push(entry);
+	flushDebugLogQueue();
 }
 
 async function getProxyConfig(settings) {
@@ -103,34 +235,110 @@ async function getProxyConfig(settings) {
 	return { ...DEFAULT_PROXY_CONFIG }
 }
 
-async function handleProxyRequest(requestInfo) {
-	if (staticResourceTypes.has(requestInfo.type)) {
-		// Skip static resources
-		return
+function getRoutingDecision(requestInfo, pathname, settings) {
+	const isMedia = mediaResourceTypes.has(requestInfo.type) || mediaExtensions.test(pathname);
+	const isStatic = staticResourceTypes.has(requestInfo.type) || staticExtensions.test(pathname);
+
+	if (isMedia && !settings.customProxyMedia) {
+		return { proxy: false, reason: 'media_direct_by_setting' };
+	}
+	if (isStatic && !settings.customProxyStatic) {
+		return { proxy: false, reason: 'static_direct_by_setting' };
 	}
 
-	const urlObj = new URL(requestInfo.url);
+	return { proxy: true, reason: 'dynamic_request' };
+}
+
+async function handleProxyRequest(requestInfo) {
+	const requestId = requestInfo.requestId;
+	const safeUrl = getSafeUrlDetails(requestInfo.url);
+	const baseDetails = {
+		requestId,
+		resourceType: requestInfo.type,
+		hostname: safeUrl.hostname,
+		pathname: safeUrl.pathname
+	};
+
+	let urlObj;
+	try {
+		urlObj = new URL(requestInfo.url);
+	} catch (err) {
+		rememberRequestContext(requestId, {
+			route: 'direct',
+			decisionReason: 'invalid_url'
+		});
+		writeDebugLog('request_decision', {
+			...baseDetails,
+			decision: 'direct',
+			reason: 'invalid_url'
+		}, 'warn');
+		return;
+	}
+
 	const hostname = urlObj.hostname;
 	const pathname = urlObj.pathname;
 
-	const isBypass = staticExtensions.test(pathname)
-			|| bypassDomains.some(domain =>
-				hostname === domain || hostname.endsWith(`.${domain}`)
-			);
+	const isBypassDomain = bypassDomains.some(domain =>
+		hostname === domain || hostname.endsWith(`.${domain}`)
+	);
 
-	if (isBypass) {
+	if (isBypassDomain) {
+		rememberRequestContext(requestId, {
+			route: 'direct',
+			decisionReason: 'bypass_domain'
+		});
+		writeDebugLog('request_decision', {
+			...baseDetails,
+			decision: 'direct',
+			reason: 'bypass_domain'
+		}, 'debug');
 		return
 	}
 
 	const settings = this.settings.get();
 
 	if (!settings.switchRegion) {
-		console.log('Region switching disabled')
+		rememberRequestContext(requestId, {
+			route: 'direct',
+			decisionReason: 'region_switch_disabled'
+		});
+		writeDebugLog('request_decision', {
+			...baseDetails,
+			decision: 'direct',
+			reason: 'region_switch_disabled'
+		}, 'info');
 		return
 	}
 
+	const routingDecision = getRoutingDecision(requestInfo, pathname, settings);
+	if (!routingDecision.proxy) {
+		rememberRequestContext(requestId, {
+			route: 'direct',
+			decisionReason: routingDecision.reason
+		});
+		writeDebugLog('request_decision', {
+			...baseDetails,
+			decision: 'direct',
+			reason: routingDecision.reason
+		}, 'debug');
+		return;
+	}
+
 	const proxyConfig = await getProxyConfig(settings)
-	console.log(`Using ${proxyConfig.type} proxy for ${requestInfo.url} -> ${proxyConfig.host}:${proxyConfig.port}`)
+	rememberRequestContext(requestId, {
+		route: 'proxy',
+		decisionReason: routingDecision.reason,
+		proxyType: proxyConfig.type,
+		proxyHost: proxyConfig.host
+	});
+	writeDebugLog('request_decision', {
+		...baseDetails,
+		decision: 'proxy',
+		reason: routingDecision.reason,
+		proxyType: proxyConfig.type,
+		proxyHost: proxyConfig.host,
+		proxyPort: proxyConfig.port
+	}, 'info');
 	return [proxyConfig, { type: 'direct' }]
 }
 
@@ -139,13 +347,17 @@ bgBrowserCtx.proxy.onRequest.addListener(
 	{ urls: ['*://*.crunchyroll.com/*'] }
 )
 bgBrowserCtx.webRequest.onAuthRequired.addListener(
-	() => {
+	(details) => {
 		const settings = this.settings.get();
-		console.log(`Using ${settings.proxyType} proxy for authentication`)
+		writeDebugLog('proxy_auth_required', {
+			requestId: details.requestId,
+			proxyType: settings.proxyType,
+			usernameConfigured: Boolean(settings.proxyUser),
+			isProxy: Boolean(details.isProxy)
+		}, 'debug');
 		if (settings.proxyType !== 'http' && settings.proxyType !== 'https') {
 			return {};
 		}
-		console.log(`Auth as ${settings.proxyUser} with password ${settings.proxyPass}`)
 		return {
 			authCredentials: {
 				username: settings.proxyUser || '',
@@ -157,8 +369,66 @@ bgBrowserCtx.webRequest.onAuthRequired.addListener(
 	['blocking']
 );
 
+bgBrowserCtx.webRequest.onBeforeRequest.addListener(
+	details => {
+		const startedAt = Date.now();
+		const proxyInfo = details.proxyInfo || {};
+		rememberRequestContext(details.requestId, {
+			startedAt,
+			route: getRequestContext(details.requestId).route
+				|| (details.proxyInfo ? 'proxy' : 'unknown'),
+			proxyType: getRequestContext(details.requestId).proxyType || proxyInfo.type || null,
+			proxyHost: getRequestContext(details.requestId).proxyHost || proxyInfo.host || null
+		});
+		writeDebugLog('request_started', {
+			...getRequestLifecycleDetails(details),
+			startedAt
+		}, 'trace');
+	},
+	{ urls: ['*://*.crunchyroll.com/*'] }
+);
+
+bgBrowserCtx.webRequest.onHeadersReceived.addListener(
+	details => {
+		const statusCode = Number(details.statusCode) || 0;
+		writeDebugLog('request_response', {
+			...getRequestLifecycleDetails(details),
+			statusCode
+		}, statusCode >= 400 ? 'warn' : 'debug');
+	},
+	{ urls: ['*://*.crunchyroll.com/*'] }
+);
+
+bgBrowserCtx.webRequest.onCompleted.addListener(
+	details => {
+		const context = getRequestContext(details.requestId);
+		const statusCode = Number(details.statusCode) || 0;
+		const durationMs = context.startedAt ? Math.max(0, Date.now() - context.startedAt) : null;
+		writeDebugLog('request_completed', {
+			...getRequestLifecycleDetails(details),
+			statusCode,
+			durationMs
+		}, statusCode >= 400 ? 'warn' : 'info');
+		forgetRequestContext(details.requestId);
+	},
+	{ urls: ['*://*.crunchyroll.com/*'] }
+);
+
+bgBrowserCtx.webRequest.onErrorOccurred.addListener(
+	details => {
+		const context = getRequestContext(details.requestId);
+		const durationMs = context.startedAt ? Math.max(0, Date.now() - context.startedAt) : null;
+		writeDebugLog('request_failed', {
+			...getRequestLifecycleDetails(details),
+			error: details.error,
+			durationMs
+		}, 'error');
+		forgetRequestContext(details.requestId);
+	},
+	{ urls: ['*://*.crunchyroll.com/*'] }
+);
+
 bgBrowserCtx.proxy.onError.addListener(error => {
-	console.error(`Proxy error: ${error.message}`)
 	const settings = this.settings.get();
 	writeDebugLog('proxy_error', {
 		message: error.message,
@@ -167,7 +437,7 @@ bgBrowserCtx.proxy.onError.addListener(error => {
 		lineNumber: error.lineNumber,
 		duringProxyTest: proxyTestsInProgress > 0,
 		notifyProxyErrors: settings.notifyProxyErrors
-	});
+	}, 'error');
 	if (proxyTestsInProgress > 0) {
 		proxyTestError = error.message
 	} else if (settings.notifyProxyErrors) {
@@ -218,7 +488,15 @@ async function testProxyConfig(proxy, sendResult, timeout = MANUAL_PROXY_TEST_TI
 	});
 
 	function testProxyHandler(requestInfo) {
-		console.log(`Testing ${proxy.type} proxy for ${requestInfo.url} -> ${proxy.host}:${proxy.port}`)
+		const safeUrl = getSafeUrlDetails(requestInfo.url);
+		writeDebugLog('proxy_test_request', {
+			resourceType: requestInfo.type,
+			hostname: safeUrl.hostname,
+			pathname: safeUrl.pathname,
+			proxyType: proxy.type,
+			proxyHost: proxy.host,
+			proxyPort: proxy.port
+		}, 'trace');
 
 		return {
 			type: proxy.type,
@@ -317,13 +595,11 @@ function maybeUpdateProxyKeepAlive() {
 	const shouldKeepAlive = settings.switchRegion && settings.keepAlive && activeCrunchyrollTabs.size > 0;
 
 	if (shouldKeepAlive && !proxyStatusTimer && !proxyStatusRunning) {
-		console.log('Starting keep-alive pings');
 		writeDebugLog('keep_alive_start', {
 			activeCrunchyrollTabs: activeCrunchyrollTabs.size
 		});
 		scheduleKeepAliveProxyStatus(0);
 	} else if (!shouldKeepAlive && proxyStatusTimer) {
-		console.log('Stopping keep-alive pings');
 		writeDebugLog('keep_alive_stop', {
 			switchRegion: settings.switchRegion,
 			keepAlive: settings.keepAlive,
@@ -350,7 +626,6 @@ async function keepAliveProxyStatus() {
 	proxyStatusRunning = true;
 	try {
 		if (proxyTestsInProgress > 0) {
-			console.log('Skipping keep-alive proxy check because another proxy test is running')
 			writeDebugLog('keep_alive_skip', {
 				reason: 'proxy_test_in_progress',
 				inProgress: proxyTestsInProgress
@@ -358,7 +633,6 @@ async function keepAliveProxyStatus() {
 		} else {
 			const proxyConfig = await getProxyConfig(settings)
 			await testProxyConfig(proxyConfig, result => {
-				console.log(`Keep alive proxy: ${result.success ? 'Success' : 'Failure'}`)
 				writeDebugLog('keep_alive_result', result)
 			}, KEEP_ALIVE_PROXY_TEST_TIMEOUT)
 		}

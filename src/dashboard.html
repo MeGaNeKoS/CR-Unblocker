@@ -12,37 +12,56 @@
     <div class="tab-area">
         <ul class="tabs">
             <li>
-                <p class="brand">CR-Unblocker <span>v4.0.6</span></p>
+                <p class="brand">CR-Unblocker <span>v4.1.0</span></p>
             </li>
             <li class="active"><a href="#tab-settings">Settings</a></li>
             <li><a href="#tab-about">About</a></li>
         </ul>
         <div class="tab-content">
             <div class="tab active" id="tab-settings">
-                <h2>Settings</h2>
-                <input type="checkbox" id="switchRegion" class="cr-checkbox" />
-                <label for="switchRegion">Switch region on Crunchyroll</label>
+                <section class="settings-section" aria-labelledby="settings-heading">
+                    <h2 id="settings-heading">Settings</h2>
+                    <div class="setting-field">
+                        <input type="checkbox" id="switchRegion" class="cr-checkbox" />
+                        <label for="switchRegion">Switch region on Crunchyroll</label>
+                    </div>
+                </section>
 
-                <h2>Proxy Configuration</h2>
-                <input type="checkbox" id="keepAlive" class="cr-checkbox" />
-                <label for="keepAlive"
-                    title="Keeps the proxy connection active. Some providers terminate idle connections, so this prevents that.">Keep
-                    Alive</label>
-                <br>
-                <input type="checkbox" id="notifyProxyErrors" class="cr-checkbox" />
-                <label for="notifyProxyErrors"
-                    title="Shows a browser notification when Firefox reports a proxy error outside a manual proxy test.">Proxy
-                    error notifications</label>
-                <br>
-                <input type="checkbox" id="debugLog" class="cr-checkbox" />
-                <label for="debugLog"
-                    title="Stores recent extension events locally so they can be copied into a bug report.">Debug
-                    logging</label>
-                <br>
-                <input type="checkbox" id="proxyCustom" class="cr-checkbox" />
-                <label for="proxyCustom">Use custom proxy</label>
+                <section class="settings-section" aria-labelledby="traffic-routing-heading">
+                    <h2 id="traffic-routing-heading">Traffic routing</h2>
+                    <div class="setting-field">
+                        <input type="checkbox" id="keepAlive" class="cr-checkbox" />
+                        <label for="keepAlive"
+                            title="Keeps the proxy connection active. Some providers terminate idle connections, so this prevents that.">Keep
+                            Alive</label>
+                    </div>
+                    <div class="setting-field">
+                        <input type="checkbox" id="notifyProxyErrors" class="cr-checkbox" />
+                        <label for="notifyProxyErrors"
+                            title="Shows a browser notification when Firefox reports a proxy error outside a manual proxy test.">Proxy
+                            error notifications</label>
+                    </div>
+                    <div class="setting-field">
+                        <input type="checkbox" id="customProxyStatic" class="cr-checkbox" />
+                        <label for="customProxyStatic">Proxy static assets</label>
+                    </div>
+                    <div class="setting-field setting-field-media">
+                        <input type="checkbox" id="customProxyMedia" class="cr-checkbox" />
+                        <label for="customProxyMedia">Proxy media/video</label>
+                        <div class="proxy-bandwidth-warning" role="alert" aria-labelledby="proxyBandwidthWarningTitle">
+                            <strong id="proxyBandwidthWarningTitle">Media/video proxy warning</strong>
+                            <p>Proxying media/video uses community proxy bandwidth. Please use your own server when possible.</p>
+                        </div>
+                    </div>
+                </section>
 
-                <table>
+                <section class="settings-section" aria-labelledby="proxy-configuration-heading">
+                    <h2 id="proxy-configuration-heading">Proxy Configuration</h2>
+                    <div class="setting-field">
+                        <input type="checkbox" id="proxyCustom" class="cr-checkbox" />
+                        <label for="proxyCustom">Use custom proxy</label>
+                    </div>
+                    <table class="proxy-table">
                     <tr>
                         <td>
                             <label for="proxyType">Proxy Type</label>
@@ -74,28 +93,34 @@
                         <td><label for="proxyStatus">Current Proxy</label></td>
                         <td><label id="proxyStatus"></label></td>
                     </tr>
-                </table>
-                <button id="testProxyBtn" class="cr-button" style="
-                        min-width: 0;
-                        width: auto;
-                        display: inline-block;
-                        margin: 10px 0 15px 0;
-                        padding: 7px 16px;
-                        font-size: 1rem;
-                        box-sizing: border-box;
-                      ">
+                    </table>
+                    <button id="testProxyBtn" class="cr-button proxy-test-button">
                     Test Proxy
-                </button>
-                <p id="proxyTestResult"></p>
-                <h2>Debug Log</h2>
-                <div class="button-row">
-                    <button id="refreshDebugLogBtn" class="cr-button compact-button">Refresh</button>
-                    <button id="copyDebugLogBtn" class="cr-button compact-button">Copy</button>
-                    <button id="downloadDebugLogBtn" class="cr-button compact-button">Download</button>
-                    <button id="clearDebugLogBtn" class="cr-button compact-button">Clear</button>
-                </div>
-                <textarea id="debug-log-output" readonly></textarea>
-                <br>
+                    </button>
+                    <p id="proxyTestResult"></p>
+                </section>
+
+                <section class="settings-section" aria-labelledby="debug-log-heading">
+                    <h2 id="debug-log-heading">Debug Log</h2>
+                    <div class="setting-field setting-field-log-level">
+                        <label for="logLevel">Log level</label>
+                        <select id="logLevel">
+                            <option value="error">Error</option>
+                            <option value="warn">Warning</option>
+                            <option value="info">Info</option>
+                            <option value="debug">Debug</option>
+                            <option value="trace">Trace</option>
+                        </select>
+                    </div>
+                    <p class="setting-help">Events are always captured locally. This level controls which events are visible in the debug log.</p>
+                    <div class="button-row">
+                        <button id="refreshDebugLogBtn" class="cr-button compact-button">Refresh</button>
+                        <button id="copyDebugLogBtn" class="cr-button compact-button">Copy</button>
+                        <button id="downloadDebugLogBtn" class="cr-button compact-button">Download</button>
+                        <button id="clearDebugLogBtn" class="cr-button compact-button">Clear</button>
+                    </div>
+                    <textarea id="debug-log-output" readonly></textarea>
+                </section>
             </div>
             <div class="tab" id="tab-about">
                 <h2>About</h2>

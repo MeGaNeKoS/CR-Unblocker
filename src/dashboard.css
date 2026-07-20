@@ -86,6 +86,67 @@ h1, h2, h3, h4, h5, h6 {
 	font-family: Roboto, sans-serif;
 	color: white;
 }
+
+#tab-settings {
+	--settings-space: 18px;
+	--settings-control-gap: 8px;
+}
+
+.proxy-bandwidth-warning {
+	padding: 9px 10px;
+	border: 2px solid white;
+	border-radius: 4px;
+	background-color: #9e3f12;
+	color: white;
+	line-height: 1.35;
+}
+
+.proxy-bandwidth-warning p {
+	margin: 6px 0 0;
+}
+
+.settings-section {
+	margin: 0 0 var(--settings-space);
+}
+
+.settings-section:last-child {
+	margin-bottom: 0;
+}
+
+.settings-section h2 {
+	margin-bottom: 12px;
+}
+
+.setting-field {
+	display: flex;
+	align-items: center;
+	gap: var(--settings-control-gap);
+	margin: 0 0 10px;
+}
+
+.setting-field-media {
+	align-items: start;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+}
+
+.setting-field-media .proxy-bandwidth-warning {
+	grid-column: 2;
+	margin: 2px 0 0;
+}
+
+.setting-field-log-level {
+	max-width: 420px;
+}
+
+.setting-help {
+	margin: -2px 0 12px;
+}
+
+.proxy-table {
+	margin-top: 12px;
+}
+
 .tab :first-child {
 	margin-top: 0;
 }
@@ -122,6 +183,16 @@ h1, h2, h3, h4, h5, h6 {
 	display: inline-block;
 	margin: 0;
 	padding: 7px 16px;
+}
+
+.proxy-test-button {
+	min-width: 0;
+	width: auto;
+	display: inline-block;
+	margin: 10px 0 15px;
+	padding: 7px 16px;
+	font-size: 1rem;
+	box-sizing: border-box;
 }
 
 #debug-log-output {
@@ -208,5 +279,16 @@ h1, h2, h3, h4, h5, h6 {
 		font-size: 1em;
 		padding: 12px 0;
 		margin: 12px 0;
+	}
+
+	.proxy-test-button {
+		min-width: 0;
+		padding: 7px 16px;
+		margin: 10px 0 15px;
+	}
+
+	.setting-field-media .proxy-bandwidth-warning {
+		grid-column: 1 / -1;
+		margin-left: 0;
 	}
 }

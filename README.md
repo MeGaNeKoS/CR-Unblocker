@@ -1,14 +1,18 @@
-# CR-Unblocker 4.0
+# CR-Unblocker 4.1
 
-CR-Unblocker helps accessing region locked anime on Crunchyroll without the need for a VPN. The extension proxies geo-restricted Crunchyroll traffic through a U.S. server while loading static assets directly so the site stays fast and responsive.
+CR-Unblocker helps accessing region locked anime on Crunchyroll without the need for a VPN. The extension proxies geo-restricted Crunchyroll traffic through a U.S. server while loading static assets and media directly by default so the site stays fast and responsive.
 
 ## I've heard it isn't safe?
-Only the geo-blocked Crunchyroll traffic goes through our proxy—no logging or similar. If you do not trust our servers, you are free to configure your own SOCKS or HTTP proxy in the extension settings. Please note that we can not be held responsible for compromised accounts.
+Only the routed Crunchyroll traffic goes through our proxy. Extension diagnostics are bounded and stored locally in the browser; debug logs are not sent to our servers. If you do not trust our servers, you are free to configure your own SOCKS or HTTP proxy in the extension settings. Please note that we can not be held responsible for compromised accounts.
 
 ## Installing
 Install CR-Unblocker for Firefox desktop or Android from [AMO](https://addons.mozilla.org/firefox/addon/crunchy-unblocker).
 
 The extension was previously available on the Chrome and Edge stores, but has since been removed. The old version used a cookie-based session swapping approach which no longer works. The extension was later rewritten to use Firefox's `browser.proxy.onRequest` API for proxy routing, which means the current version only works on Firefox.
+
+### Diagnostics and traffic controls
+
+The dashboard includes local request diagnostics with selectable log levels. Static assets and media/video are direct by default to reduce latency and community-proxy bandwidth usage. The settings page allows either category to be routed through the proxy when troubleshooting requires it; use a private server when proxying media/video.
 
 ### Chrome / Chromium users
 
