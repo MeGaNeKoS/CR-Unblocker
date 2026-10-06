@@ -105,6 +105,52 @@ h1, h2, h3, h4, h5, h6 {
 	margin: 6px 0 0;
 }
 
+.proxy-notice {
+	margin: 0 0 12px;
+	padding: 9px 12px;
+	border: 2px solid white;
+	border-radius: 4px;
+	background-color: #9e3f12;
+	color: white;
+	line-height: 1.4;
+}
+
+.proxy-notice p {
+	margin: 6px 0 0;
+}
+
+.proxy-notice p:first-child {
+	margin-top: 0;
+}
+
+.proxy-notice-toggle {
+	margin-left: 6px;
+	padding: 1px 8px;
+	border: 1px solid white;
+	border-radius: 4px;
+	background: transparent;
+	color: white;
+	font: inherit;
+	cursor: pointer;
+}
+
+.proxy-notice-toggle:hover {
+	background-color: white;
+	color: #9e3f12;
+}
+
+.proxy-notice-summary {
+	display: none;
+}
+
+.proxy-notice.minimized .proxy-notice-summary {
+	display: block;
+}
+
+.proxy-notice.minimized .proxy-notice-full {
+	display: none;
+}
+
 .settings-section {
 	margin: 0 0 var(--settings-space);
 }

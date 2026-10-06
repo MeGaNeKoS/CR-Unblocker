@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.1.1 (2026-10-06)
+
+### Added
+
+- Added a community proxy notice to the popup and the settings dashboard, asking users to use their own proxy.
+
+### Changed
+
+- Proxy error notifications now appear once after five consecutive proxy errors instead of on every error.
+- Errors raised during a proxy test no longer count toward the notification, and any completed proxied request resets the count.
+
+### AMO release notes
+
+CR-Unblocker 4.1.1 reduces proxy error notification noise and adds a notice to the popup and settings asking users to use their own proxy, since the free community proxy is crowded. A notification now appears once after five consecutive proxy errors, and a successful proxied request resets the count.
+
 ## 4.1.0 – 2026-07-20
 
 ### Added

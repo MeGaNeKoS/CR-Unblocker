@@ -9,10 +9,19 @@
 </head>
 
 <body>
+    <div class="proxy-notice" id="proxyNotice" role="note">
+        <div class="proxy-notice-full">
+            <p>Thank you for using CR-Unblocker! The free community proxy runs on spare capacity of my personal server, and it is past its limit. In September it handled over 450,000 connections from more than 15,000 different IP addresses, with peaks above 40,000 a day. About 10% of that was not Crunchyroll at all: someone appears to have put our login on their whole network, sending DNS lookups and sites like YouTube, X and Instagram through it. The server now refuses anything that is not Crunchyroll. In the first week of October alone it moved over 60 GB.</p>
+            <p>I started the community proxy because I had spare resources on my server and was happy to share them for free. It has also been a good opportunity for me to learn network management. But it now uses far more resources than I had or ever expected, and I have no plans to add more servers or upgrade the current one.</p>
+            <p>The community proxy is meant for watching anime and has been optimized for that, so the bandwidth limit is now enforced: each IP gets 500 MB per month at full speed, up to 5 GB per month. As a heavy otaku living in Japan myself, 500 MB is enough for me to watch every new series each month, since video does not go through the proxy by default. Reading manga is different: it needs the "Proxy static assets" option, which sends every page image through the proxy. If you read manga, I advise you to get your own proxy. You can still use the community proxy for up to 5 GB a month, but past 500 MB the speed is not guaranteed.</p>
+            <p>For a faster, more reliable connection with no limit, use your own proxy. A private US proxy with its own IP costs around $10 a year; enter it in the custom proxy settings below. <button type="button" id="proxyNoticeToggle" class="proxy-notice-toggle" aria-expanded="true">Minimize</button></p>
+        </div>
+        <p class="proxy-notice-summary">The free community proxy is over its limit. Bandwidth limits now apply; a US proxy is about $10/year.</p>
+    </div>
     <div class="tab-area">
         <ul class="tabs">
             <li>
-                <p class="brand">CR-Unblocker <span>v4.1.0</span></p>
+                <p class="brand">CR-Unblocker <span>v4.1.1</span></p>
             </li>
             <li class="active"><a href="#tab-settings">Settings</a></li>
             <li><a href="#tab-about">About</a></li>

@@ -14,6 +14,8 @@ let proxyTestsInProgress = 0
 let proxyTestError = null
 let proxyTestInFlight = null
 let proxyTestInFlightKey = null
+let proxyConsecutiveFailures = 0
+const CONSECUTIVE_FAILURES_THRESHOLD = 5
 
 let proxyStatusTimer = null
 let proxyStatusRunning = false
@@ -404,6 +406,9 @@ bgBrowserCtx.webRequest.onCompleted.addListener(
 		const context = getRequestContext(details.requestId);
 		const statusCode = Number(details.statusCode) || 0;
 		const durationMs = context.startedAt ? Math.max(0, Date.now() - context.startedAt) : null;
+		if (context.route === 'proxy') {
+			proxyConsecutiveFailures = 0
+		}
 		writeDebugLog('request_completed', {
 			...getRequestLifecycleDetails(details),
 			statusCode,
@@ -430,21 +435,26 @@ bgBrowserCtx.webRequest.onErrorOccurred.addListener(
 
 bgBrowserCtx.proxy.onError.addListener(error => {
 	const settings = this.settings.get();
+	const duringProxyTest = proxyTestsInProgress > 0
+	if (duringProxyTest) {
+		proxyTestError = error.message
+	} else {
+		proxyConsecutiveFailures += 1
+	}
 	writeDebugLog('proxy_error', {
 		message: error.message,
 		name: error.name,
 		fileName: error.fileName,
 		lineNumber: error.lineNumber,
-		duringProxyTest: proxyTestsInProgress > 0,
-		notifyProxyErrors: settings.notifyProxyErrors
+		duringProxyTest,
+		notifyProxyErrors: settings.notifyProxyErrors,
+		consecutiveFailures: proxyConsecutiveFailures
 	}, 'error');
-	if (proxyTestsInProgress > 0) {
-		proxyTestError = error.message
-	} else if (settings.notifyProxyErrors) {
+	if (settings.notifyProxyErrors && !duringProxyTest && proxyConsecutiveFailures === CONSECUTIVE_FAILURES_THRESHOLD) {
 		bgBrowserCtx.notifications.create('proxy-error', {
 			type: 'basic',
 			iconUrl: bgBrowserCtx.runtime.getURL('icons/Crunchyroll-128.png'),
-			title: 'CR-Unblocker encountered an error!',
+			title: `CR-Unblocker encountered ${CONSECUTIVE_FAILURES_THRESHOLD} consecutive errors!`,
 			message: error.message
 		})
 	}
@@ -522,6 +532,7 @@ async function testProxyConfig(proxy, sendResult, timeout = MANUAL_PROXY_TEST_TI
 			if (proxyTestError) {
 				result = { success: false, error: proxyTestError, durationMs }
 			} else if (res.ok) {
+				proxyConsecutiveFailures = 0
 				result = {
 					success: true,
 					slow: durationMs > SLOW_PROXY_TEST_THRESHOLD,

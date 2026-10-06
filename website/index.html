@@ -13,6 +13,22 @@
         <a href="https://addons.mozilla.org/en/firefox/addon/crunchy-unblocker/">here</a>.
     </p>
     <h2>Announcements</h2>
+    <h3>Version 4.1.1 Release</h3>
+    <p>
+        Thank you for using CR-Unblocker! The free community proxy runs on spare capacity of my personal server, and it is past its limit. In September it handled over 450,000 connections from more than 15,000 different IP addresses, with peaks above 40,000 a day. About 10% of that was not Crunchyroll at all: someone appears to have put our login on their whole network, sending DNS lookups and sites like YouTube, X and Instagram through it. The server now refuses anything that is not Crunchyroll. In the first week of October alone it moved over 60 GB.
+    </p>
+    <p>
+        I started the community proxy because I had spare resources on my server and was happy to share them for free. It has also been a good opportunity for me to learn network management. But it now uses far more resources than I had or ever expected, and I have no plans to add more servers or upgrade the current one.
+    </p>
+    <p>
+        The community proxy is meant for watching anime and has been optimized for that, so the bandwidth limit is now enforced: each IP gets 500 MB per month at full speed, up to 5 GB per month. As a heavy otaku living in Japan myself, 500 MB is enough for me to watch every new series each month, since video does not go through the proxy by default. Reading manga is different: it needs the "Proxy static assets" option, which sends every page image through the proxy. If you read manga, I advise you to get your own proxy. You can still use the community proxy for up to 5 GB a month, but past 500 MB the speed is not guaranteed.
+    </p>
+    <p>
+        For a faster, more reliable connection with no limit, use your own proxy. A private US proxy with its own IP costs around $10 a year; enter it on the addon's Settings page under "Use custom proxy".
+    </p>
+    <p>
+        To route your traffic and apply the bandwidth limit, the server sees your IP address and the Crunchyroll host you connect to. It only stores weekly and monthly aggregate data, kept for the last two months, for stability metrics and abuse prevention.
+    </p>
     <h3>Version 4.1.0 Release</h3>
     <p>
         This release adds local diagnostics with selectable log levels, clearer traffic controls, and a reorganized settings
@@ -59,6 +75,13 @@
         </small>
     </p>
     <h2>Changelog</h2>
+    <h3>4.1.1: Quieter proxy notifications and community proxy notice</h3>
+    <ul>
+        <li>Added a community proxy notice to the popup and settings</li>
+        <li>Proxy error notifications appear once after five consecutive errors</li>
+        <li>Errors during proxy tests no longer trigger notifications</li>
+        <li>Any successful proxied request resets the error count</li>
+    </ul>
     <h3>4.1.0 – Local diagnostics and traffic controls</h3>
     <ul>
         <li>Added structured local request diagnostics with Error, Warning, Info, Debug, and Trace levels</li>

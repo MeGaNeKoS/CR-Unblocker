@@ -120,3 +120,16 @@ body.mobile-popup .bigger {
 body.mobile-popup label {
 	font-size: 1.15em;
 }
+
+.proxy-notice {
+	margin: 0 0 1em;
+	padding: 0.6em 0.7em;
+	border: 2px solid white;
+	border-radius: 4px;
+	background-color: #9e3f12;
+	line-height: 1.35;
+}
+
+.proxy-notice p {
+	margin: 0;
+}

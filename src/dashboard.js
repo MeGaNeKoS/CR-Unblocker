@@ -354,3 +354,29 @@ window.addEventListener('unload', () => {
 		clearTimeout(proxyStatusTimer)
 	}
 })
+
+/**
+ * Community proxy notice
+ */
+const proxyNotice = document.getElementById('proxyNotice');
+const proxyNoticeToggle = document.getElementById('proxyNoticeToggle');
+
+function displayProxyNotice(minimized) {
+	proxyNotice.classList.toggle('minimized', minimized);
+	proxyNoticeToggle.textContent = minimized ? 'Expand' : 'Minimize';
+	proxyNoticeToggle.setAttribute('aria-expanded', String(!minimized));
+	const host = minimized
+		? proxyNotice.querySelector('.proxy-notice-summary')
+		: proxyNotice.querySelector('.proxy-notice-full p:last-child');
+	host.append(proxyNoticeToggle);
+}
+
+proxyNoticeToggle.addEventListener('click', () => {
+	const minimized = !proxyNotice.classList.contains('minimized');
+	displayProxyNotice(minimized);
+	browser.storage.local.set({ proxyNoticeMinimized: minimized });
+});
+
+browser.storage.local.get({ proxyNoticeMinimized: false }, item => {
+	displayProxyNotice(item.proxyNoticeMinimized === true);
+});
