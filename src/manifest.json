@@ -12,7 +12,6 @@
   },
   "permissions": [
     "activeTab",
-    "cookies",
     "notifications",
     "storage",
     "*://*.crunchyroll.com/*",

@@ -27,7 +27,7 @@ CR-Unblocker 4.1.1 reduces proxy error notification noise and adds a notice to t
 ### Changed
 
 - Static assets and media/video remain direct by default to reduce latency and community-proxy bandwidth usage.
-- JSON/XML API traffic is no longer assumed to be static and can follow the proxy route when needed for region access.
+- JSON/XML API traffic is no longer assumed to be static and follows the normal proxy route.
 - Proxy diagnostics no longer print proxy credentials and do not send debug logs to the community proxy.
 - Improved the settings layout and grouped traffic, proxy, and diagnostic controls.
 

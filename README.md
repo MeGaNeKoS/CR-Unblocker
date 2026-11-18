@@ -1,6 +1,6 @@
 # CR-Unblocker 4.1
 
-CR-Unblocker helps accessing region locked anime on Crunchyroll without the need for a VPN. The extension proxies geo-restricted Crunchyroll traffic through a U.S. server while loading static assets and media directly by default so the site stays fast and responsive.
+CR-Unblocker is a Firefox extension that routes Crunchyroll requests through a proxy server: the community proxy, or one you configure yourself. Static assets and media load directly by default so the site stays fast and the proxy carries as little traffic as possible. The extension only selects a proxy for each request; it does not read or change cookies, headers, or sessions.
 
 ## I've heard it isn't safe?
 Only the routed Crunchyroll traffic goes through our proxy. Extension diagnostics are bounded and stored locally in the browser; debug logs are not sent to our servers. If you do not trust our servers, you are free to configure your own SOCKS or HTTP proxy in the extension settings. Please note that we can not be held responsible for compromised accounts.
@@ -8,7 +8,7 @@ Only the routed Crunchyroll traffic goes through our proxy. Extension diagnostic
 ## Installing
 Install CR-Unblocker for Firefox desktop or Android from [AMO](https://addons.mozilla.org/firefox/addon/crunchy-unblocker).
 
-The extension was previously available on the Chrome and Edge stores, but has since been removed. The old version used a cookie-based session swapping approach which no longer works. The extension was later rewritten to use Firefox's `browser.proxy.onRequest` API for proxy routing, which means the current version only works on Firefox.
+Versions before 4.0.0 were built by previous maintainers on a different design and are no longer distributed or supported. The current version is built on Firefox's `browser.proxy.onRequest` API, so it only works on Firefox.
 
 ### Diagnostics and traffic controls
 
@@ -16,9 +16,7 @@ The dashboard includes local request diagnostics with selectable log levels. Sta
 
 ### Chrome / Chromium users
 
-For Chrome, Edge, Brave, and other Chromium-based browsers, use [GeoBypasser](https://github.com/MeGaNeKoS/GeoBypasser) instead. It is a generic proxy/routing extension rather than a Crunchyroll-specific unblocker, and it is available on the [Chrome Web Store](https://chromewebstore.google.com/detail/geobypass/ihocglepfddiancfooeablkngmckkjdm). Chrome Web Store policy can be strict about extensions whose sole purpose is bypassing restrictions on a specific website, so the generic routing approach is easier to publish and safer from future removal.
-
-GeoBypasser can import service-specific rules, including the maintained [Crunchyroll rule](https://github.com/MeGaNeKoS/GeoBypass-Rules/blob/main/Crunchyroll/Crunchyroll-rule.json). This is the preferred Chromium path because it keeps the browser extension generic while the rules define which traffic should use the proxy.
+For Chrome, Edge, Brave, and other Chromium-based browsers, use [GeoBypasser](https://github.com/MeGaNeKoS/GeoBypasser) instead. It is a generic proxy router where you choose which websites use which proxy, and it is available on the [Chrome Web Store](https://chromewebstore.google.com/detail/geobypass/ihocglepfddiancfooeablkngmckkjdm).
 
 ## Status & Monitoring
 We publish live service status at [community-proxy.meganeko.dev/monitor](https://community-proxy.meganeko.dev/monitor), which also feeds our uptime robot alerts. If you want to inspect the HAProxy backend directly, the raw statistics dashboard is available at [community-proxy.meganeko.dev/stats](https://community-proxy.meganeko.dev/stats).
