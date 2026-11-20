@@ -2,11 +2,24 @@
 
 CR-Unblocker is a Firefox extension that routes Crunchyroll requests through a proxy server: the community proxy, or one you configure yourself. Static assets and media load directly by default so the site stays fast and the proxy carries as little traffic as possible. The extension only selects a proxy for each request; it does not read or change cookies, headers, or sessions.
 
+## Removed from Firefox Add-ons (November 2026)
+On 18 November 2026, Mozilla disabled CR-Unblocker on Firefox Add-ons (AMO) after receiving a DMCA notice sent on behalf of Crunchyroll, LLC. The full notice and a summary of its main points are in [docs/dmca/2026-11-18-crunchyroll.md](docs/dmca/2026-11-18-crunchyroll.md).
+
+CR-Unblocker has a long history. Early versions (2.x) worked by swapping Crunchyroll session IDs. Later versions moved away from that, and since 4.0 the add-on has only been a proxy: it tells Firefox which proxy to use for Crunchyroll requests and does not read or change cookies, headers, logins, or sessions.
+
+Part of this is the project's past catching up with it, and part of it is on me. When I took over and rebuilt the add-on as a proxy, I didn't describe it carefully. I wrote the AMO listing around what users get, the "full US Crunchyroll anime library" from any region, instead of what the add-on does. I also left the old changelog on the homepage, including an entry asking for volunteers to run unblock servers. The notice quotes both. Mozilla also confirmed that the complaint covers what the current version does, so rewriting the listing would not have resolved it.
+
+I'm not contesting the notice, and CR-Unblocker will not be published on AMO again. Existing installs no longer receive updates.
+
+If you still want a proxy, I'd suggest a general-purpose proxy extension that lets you set rules per website, so only the sites you choose use the proxy and everything else connects directly. That keeps browsing fast and the proxy light, which is what CR-Unblocker was built around.
+
+Thank you to everyone who used CR-Unblocker, and to Finn and the earlier maintainers who built and kept it running for years.
+
 ## I've heard it isn't safe?
 Only the routed Crunchyroll traffic goes through our proxy. Extension diagnostics are bounded and stored locally in the browser; debug logs are not sent to our servers. If you do not trust our servers, you are free to configure your own SOCKS or HTTP proxy in the extension settings. Please note that we can not be held responsible for compromised accounts.
 
 ## Installing
-Install CR-Unblocker for Firefox desktop or Android from [AMO](https://addons.mozilla.org/firefox/addon/crunchy-unblocker).
+CR-Unblocker is no longer available on AMO. See the notice above.
 
 Versions before 4.0.0 were built by previous maintainers on a different design and are no longer distributed or supported. The current version is built on Firefox's `browser.proxy.onRequest` API, so it only works on Firefox.
 

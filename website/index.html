@@ -9,12 +9,38 @@
     <p>A Firefox extension that routes Crunchyroll requests through a proxy server: the community proxy, or one you
         configure yourself.</p>
     <hr>
-    <h2>Download</h2>
-    <p>
-        Firefox users can get the extension
-        <a href="https://addons.mozilla.org/en/firefox/addon/crunchy-unblocker/">here</a>.
-    </p>
     <h2>Announcements</h2>
+    <h3>Removed from Firefox Add-ons (November 2026)</h3>
+    <p>
+        On 18 November 2026, Mozilla disabled CR-Unblocker on Firefox Add-ons (AMO) after receiving a DMCA notice sent
+        on behalf of Crunchyroll, LLC. The full notice and a summary of its main points are
+        <a href="https://github.com/MeGaNeKoS/CR-Unblocker/blob/main/docs/dmca/2026-11-18-crunchyroll.md">on GitHub</a>.
+    </p>
+    <p>
+        CR-Unblocker has a long history. Early versions (2.x) worked by swapping Crunchyroll session IDs. Later versions
+        moved away from that, and since 4.0 the add-on has only been a proxy: it tells Firefox which proxy to use for
+        Crunchyroll requests and does not read or change cookies, headers, logins, or sessions.
+    </p>
+    <p>
+        Part of this is the project's past catching up with it, and part of it is on me. When I took over and rebuilt the
+        add-on as a proxy, I didn't describe it carefully. I wrote the AMO listing around what users get, the "full US
+        Crunchyroll anime library" from any region, instead of what the add-on does. I also left the old changelog on the
+        homepage, including an entry asking for volunteers to run unblock servers. The notice quotes both. Mozilla also confirmed that the complaint covers what
+        the current version does, so rewriting the listing would not have resolved it.
+    </p>
+    <p>
+        I'm not contesting the notice, and CR-Unblocker will not be published on AMO again. Existing installs no longer
+        receive updates.
+    </p>
+    <p>
+        If you still want a proxy, I'd suggest a general-purpose proxy extension that lets you set rules per website, so
+        only the sites you choose use the proxy and everything else connects directly. That keeps browsing fast and the
+        proxy light, which is what CR-Unblocker was built around.
+    </p>
+    <p>
+        Thank you to everyone who used CR-Unblocker, and to Finn and the earlier maintainers who built and kept it
+        running for years.
+    </p>
     <h3>Version 4.1.1 Release</h3>
     <p>
         Thank you for using CR-Unblocker! The free community proxy runs on spare capacity of my personal server, and it is past its limit. In September it handled over 450,000 connections from more than 15,000 different IP addresses, with peaks above 40,000 a day. About 10% of that was not Crunchyroll at all: someone appears to have put our login on their whole network, sending DNS lookups and sites like YouTube, X and Instagram through it. The server now refuses anything that is not Crunchyroll. In the first week of October alone it moved over 60 GB.
